@@ -1,45 +1,64 @@
 import React from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Animated } from 'react-native';
 
 export default class FloatingInputLabel extends React.Component {
   state = {
     isFocused: false,
-    hasValue: false
+    hasValue: false,
+    borderWidth: new Animated.Value(25),
+    labelPos: new Animated.Value(18)
+  }
+
+  _setAnimations = (borderWidth, labelPos) => {
+    Animated.timing(this.state.borderWidth, {
+      toValue: borderWidth,
+      duration: 450
+    }).start();
+
+    Animated.timing(this.state.labelPos, {
+      toValue: labelPos,
+      duration: 250
+    }).start();
   }
 
   _onFocus = () => {
-    this.setState({isFocused: true})
+    this.setState({isFocused: true});
+    this._setAnimations(50, 7);
   }
 
   _onBlur = (e) => {
     const value = e.nativeEvent.text;
-    if(value.trim() !== "") {
+    if(value.trim() === "") {
       this.setState({
         isFocused: false,
         hasValue: false
-      })
+      });
+      this._setAnimations(25, 18);
     } else {
       this.setState({
         isFocused: false,
         hasValue: true
-      })
+      });
+      this._setAnimations(50, 7);
     }
   }
 
   render() {
     let {containerStyles, labelText, labelStyles, inputValue, inputStyles, changeEvt} = this.props;
+    let {borderWidth, labelPos} = this.state;
 
+    // Place the label above the input if is focused or it has a value after editing 
     if(this.state.isFocused === true || this.state.hasValue === true) {
       labelStyles = { ...labelStyles, ...styles.labelFocus};
     }
 
-    return <View style={styles.container}>
-        <View style={styles.leftBorder} />
+    return <View style={{...styles.container, ...containerStyles}}>
+        <Animated.View style={{...styles.leftBorder, width: borderWidth}} />
         <View>
-          <Text style={{...styles.label, ...labelStyles}}>{labelText}</Text>
+          <Animated.Text style={{ ...styles.label, ...labelStyles, top: labelPos}}>{labelText}</Animated.Text>
           <TextInput style={{...styles.input, ...inputStyles}} value={inputValue} onChange={changeEvt} onEndEditing={this._onBlur} onFocus={this._onFocus} {...this.props} />
         </View>
-        <View style={styles.rightBorder} />
+        <Animated.View style={{...styles.rightBorder, width: borderWidth}} />
       </View>;
   }
 }
@@ -52,7 +71,7 @@ const styles = StyleSheet.create({
     borderColor: '#f00',
   },
   leftBorder: {
-    width: 25,
+    width: 20,
     height: 50,
     position: 'absolute',
     top: 0,
@@ -63,7 +82,7 @@ const styles = StyleSheet.create({
     borderColor: '#1d1d1d'
   },
   rightBorder: {
-    width: 25,
+    width: 20,
     height: 50,
     position: 'absolute',
     top: 0,
